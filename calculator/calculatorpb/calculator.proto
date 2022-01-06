@@ -1,0 +1,59 @@
+syntax="proto3";
+
+package calculator;
+option go_package="./calculator_pb";
+
+message Sum {
+    int64 firstInt = 1;
+    int64 secondInt = 2;
+}
+
+message SumRequest {
+    Sum sum = 1;
+}
+
+message SumResponse {
+    int64 response = 1;
+}
+
+message PrimeNumber {
+    int64 prime = 1;
+}
+
+message PrimeNumberDecompositionRequest {
+    int64 number = 1;
+}
+
+message PrimeNumberDecompositionResponse {
+    PrimeNumber prime = 1;
+}
+
+message ComputeAverageRequest {
+    int64 number = 1;
+}
+
+message ComputeAverageResponse {
+    double average = 1;
+}
+
+message FindMaximumRequest {
+    int64 number = 1;
+}
+
+message FindMaximumResponse{
+    int64 maximum = 1;
+}
+
+service CalculatorService {
+    // Urany
+    rpc Sum(SumRequest) returns (SumResponse) {};
+
+    // Server Stream
+    rpc PrimeNumberDecomposition(PrimeNumberDecompositionRequest) returns (stream PrimeNumberDecompositionResponse) {};
+
+    // Client Stream
+    rpc ComputeAverage(stream ComputeAverageRequest) returns (ComputeAverageResponse) {};
+
+    // BiDi Stream
+    rpc FindMaximum(stream FindMaximumRequest) returns (stream FindMaximumResponse) {};
+}
