@@ -20,21 +20,21 @@ func main() {
 
 	c := blogpb.NewBlogServiceClient(cc)
 
-	blog := &blogpb.Blog{
-		// Id:       uuid.New().String(),
-		Id:       "0543076c-9666-4630-addc-014ddb214ded",
-		AuthorId: "Alan Oliver",
-		Content:  "Content of blog post edited 1",
-		Title:    "Title of Stuff edited 1",
-	}
+	// blog := &blogpb.Blog{
+	// 	Id: uuid.New().String(),
+	// 	// Id:       "d09f1d59-ce07-421b-9804-fa66b8c4da08",
+	// 	AuthorId: "Alan Oliver",
+	// 	Content:  "Content of blog post for list 3",
+	// 	Title:    "Title of Stuff for list 3",
+	// }
 
-	createRes, err := c.CreateBlog(context.Background(), &blogpb.CreateBlogRequest{
-		Blog: blog,
-	})
-	if err != nil {
-		log.Fatal("there's a problem here %v", err)
-	}
-	fmt.Printf("Response: %v", createRes)
+	// createRes, err := c.CreateBlog(context.Background(), &blogpb.CreateBlogRequest{
+	// 	Blog: blog,
+	// })
+	// if err != nil {
+	// 	log.Fatal("there's a problem here %v", err)
+	// }
+	// fmt.Printf("Response: %v", createRes)
 
 	// updateRes, err := c.UpdateBlog(context.Background(), &blogpb.UpdateBlogRequest{Blog: blog})
 	// if err != nil {
@@ -42,19 +42,19 @@ func main() {
 	// }
 	// fmt.Printf("Response: %v", updateRes)
 
-	// listRes, err := c.ListBlogs(context.Background(), &blogpb.ListBlogRequest{})
-	// if err != nil {
-	// 	log.Fatal("there's a problem here: %v", err)
-	// }
-	// fmt.Printf("Response: %v", listRes)
-
-	getRes, err := c.GetBlog(context.Background(), &blogpb.GetBlogRequest{Id: "0543076c-9666-4630-addc-014ddb214ded"})
+	listRes, err := c.ListBlogs(context.Background(), &blogpb.ListBlogRequest{})
 	if err != nil {
 		log.Fatal("there's a problem here: %v", err)
 	}
-	fmt.Printf("Response: %v", getRes)
+	fmt.Printf("Response: %v", listRes)
 
-	// delRes, err := c.DeleteBlog(context.Background(), &blogpb.DeleteBlogRequest{Id: "5aee4bb4-7514-43dd-9593-4533a044449b"})
+	// getRes, err := c.GetBlog(context.Background(), &blogpb.GetBlogRequest{Id: "d09f1d59-ce07-421b-9804-fa66b8c4da08"})
+	// if err != nil {
+	// 	log.Fatal("there's a problem here: %v", err)
+	// }
+	// fmt.Printf("Response: %v \n", getRes)
+
+	// delRes, err := c.DeleteBlog(context.Background(), &blogpb.DeleteBlogRequest{Id: "d09f1d59-ce07-421b-9804-fa66b8c4da08"})
 	// if err != nil {
 	// 	log.Fatal("there's a problem here: %v", err)
 	// }

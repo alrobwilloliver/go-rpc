@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"go-grpc-course/blog/blogpb"
+	db "go-grpc-course/blog/store"
 	"log"
 	"net"
 	"os"
@@ -59,139 +60,95 @@ type server struct{}
 func (*server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (*blogpb.CreateBlogResponse, error) {
 	blog := req.GetBlog()
 
-	data := blogItem{
-		ID:       blog.Id,
-		AuthorId: blog.AuthorId,
-		Content:  blog.Content,
-		Title:    blog.Title,
-	}
-
-	_, err := store.executor.Exec("INSERT INTO blog(id, author_id, content, title) VALUES (?, ?, ?, ?);", data.ID, data.AuthorId, data.Content, data.Title)
+	_, err := db.CreateBlog(blog.Id, blog.AuthorId, blog.Title, blog.Content)
 	if err != nil {
-		log.Fatalf("Failed to add blog content to the database: %v", err)
 		return nil, err
 	}
+	blogRes := blogpb.Blog{
+		Id: blog.Id,
+	}
 	return &blogpb.CreateBlogResponse{
-		Blog: blog,
+		Blog: &blogRes,
 	}, nil
 }
 
 func (*server) GetBlog(ctx context.Context, req *blogpb.GetBlogRequest) (*blogpb.GetBlogResponse, error) {
 	id := req.GetId()
 
-	row, execErr := store.executor.Query("SELECT id, author_id, title, content FROM blog WHERE id = ?;", id)
-	if execErr != nil {
-		log.Fatalf("Failed to get the blog of id: %s, with error: %v", id, execErr)
+	res, err := db.GetBlog(id)
+	if err != nil {
+		return nil, err
 	}
-	defer row.Close()
-	var blog blogpb.Blog
-	for row.Next() {
-		scanErr := row.Scan(
-			&blog.Id,
-			&blog.AuthorId,
-			&blog.Title,
-			&blog.Content,
-		)
-		if scanErr != nil {
-			log.Fatalf("Error marshalling GetBlog response: %v", scanErr)
-		}
+	fmt.Printf("Server blog %v", res)
+
+	blog := &blogpb.Blog{
+		Id:       res.Id,
+		AuthorId: res.Author_Id,
+		Content:  res.Content,
+		Title:    res.Title,
 	}
 
 	return &blogpb.GetBlogResponse{
-		Blog: &blog,
+		Blog: blog,
 	}, nil
 }
 
 func (*server) ListBlogs(ctx context.Context, req *blogpb.ListBlogRequest) (*blogpb.ListBlogResponse, error) {
-	rows, err := store.executor.Query("SELECT id, author_id, title, content FROM blog;")
+
+	res, err := db.ListBlogs()
 	if err != nil {
-		log.Fatalf("Error querying for ListBlogs in the database: %v", err)
 		return nil, err
 	}
-	var blog blogpb.Blog
-	var res []*blogpb.Blog
-
-	defer rows.Close()
-	for rows.Next() {
-		rows.Scan(
-			&blog.Id,
-			&blog.AuthorId,
-			&blog.Title,
-			&blog.Content,
-		)
-		res = append(res, &blog)
+	var blogs []*blogpb.Blog
+	for _, blog := range res {
+		blogpb := &blogpb.Blog{
+			Id:       blog.Id,
+			AuthorId: blog.Author_Id,
+			Content:  blog.Content,
+			Title:    blog.Title,
+		}
+		blogs = append(blogs, blogpb)
 	}
 
 	return &blogpb.ListBlogResponse{
-		Blog: res,
+		Blog: blogs,
 	}, nil
 }
 
 func (*server) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogRequest) (*blogpb.UpdateBlogResponse, error) {
 	reqBlog := req.GetBlog()
-	fmt.Printf("reqBlog: %v", reqBlog)
 
-	row, execErr := store.executor.Query("UPDATE blog SET author_id = ?, title = ?, content = ? WHERE id = ? RETURNING id, author_id, title, content;", reqBlog.AuthorId, reqBlog.Title, reqBlog.Content, reqBlog.Id)
-	if execErr != nil {
-		log.Fatalf("Failed to get the blog of id: %s, with error: %v", reqBlog.Id, execErr)
+	res, err := db.UpdateBlog(reqBlog.Id, reqBlog.AuthorId, reqBlog.Title, reqBlog.Content)
+	if err != nil {
+		return nil, err
 	}
-	defer row.Close()
-	var blog blogpb.Blog
-	for row.Next() {
-		scanErr := row.Scan(
-			&blog.Id,
-			&blog.AuthorId,
-			&blog.Title,
-			&blog.Content,
-		)
-		if scanErr != nil {
-			log.Fatalf("Error marshalling GetBlog response: %v", scanErr)
-		}
+	blog := &blogpb.Blog{
+		Id:       res.Id,
+		AuthorId: res.Author_Id,
+		Content:  res.Content,
+		Title:    res.Title,
 	}
 
 	return &blogpb.UpdateBlogResponse{
-		Blog: &blog,
+		Blog: blog,
 	}, nil
 }
 
 func (*server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*blogpb.DeleteBlogResponse, error) {
 	id := req.GetId()
 
-	row, queryErr := store.executor.Query("DELETE FROM blog WHERE id = ?;", id)
-	if queryErr != nil {
-		log.Fatalf("Failed to delete the blog of id: %s, with error: %v", id, queryErr)
-		return nil, queryErr
-	}
-	defer row.Close()
-	var blog blogpb.Blog
-	for row.Next() {
-		scanErr := row.Scan(
-			&blog.Id,
-			&blog.AuthorId,
-			&blog.Title,
-			&blog.Content,
-		)
-		if scanErr != nil {
-			log.Fatalf("Error marshalling GetBlog response: %v", scanErr)
-			return nil, scanErr
-		}
+	err := db.DeleteBlog(id)
+	if err != nil {
+		return nil, err
 	}
 
-	fmt.Printf("Deleted the blog of id: %v", id)
+	fmt.Printf("Deleted blog with id: %s", id)
 
 	return &blogpb.DeleteBlogResponse{}, nil
 }
 
 func main() {
 	fmt.Println("Starting RPC Blog Server...")
-
-	dsn := "file:/home/alrob/personalGo/go-grpc-course/blog/store/data.db"
-	var err error
-	store, err = NewStore(dsn)
-	if err != nil {
-		log.Fatalf("Failed to connect to database %v", err)
-		return
-	}
 
 	lis, err := net.Listen("tcp", "0.0.0.0:50051")
 	if err != nil {
@@ -216,7 +173,7 @@ func main() {
 	// block until a signal is received
 	<-ch
 	fmt.Println("Closing the db")
-	store.db.Close()
+	db.DB.Close()
 	fmt.Println("Stopping the server")
 	s.Stop()
 	fmt.Println("Close the listener")
