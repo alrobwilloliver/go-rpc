@@ -46,7 +46,7 @@ func main() {
 	if err != nil {
 		log.Fatal("there's a problem here: %v", err)
 	}
-	fmt.Printf("Response: %v", listRes)
+	fmt.Printf("Response: %v \n", listRes)
 
 	// getRes, err := c.GetBlog(context.Background(), &blogpb.GetBlogRequest{Id: "d09f1d59-ce07-421b-9804-fa66b8c4da08"})
 	// if err != nil {

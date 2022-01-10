@@ -2,7 +2,11 @@ package db
 
 import (
 	"database/sql"
+	"flag"
 	"fmt"
+	"go-grpc-course/lib/ff"
+	"log"
+	"os"
 
 	_ "github.com/lib/pq"
 )
@@ -11,16 +15,31 @@ var (
 	DB *sql.DB
 )
 
-const (
-	host         = "localhost"
-	port         = "5433"
-	user         = "postgres"
-	databaseName = "blog_test"
-	sslMode      = "disable"
-)
-
 func init() {
-	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", host, port, user, "password", databaseName, sslMode)
+
+	var (
+		host         string
+		port         string
+		user         string
+		databaseName string
+		password     string
+		sslMode      string
+	)
+
+	fs := flag.NewFlagSet("blog", flag.ExitOnError)
+	fs.StringVar(&host, "host", "localhost", "the host for the database")
+	fs.StringVar(&port, "port", "5433", "port to host the database on")
+	fs.StringVar(&user, "postgres-user", "postgres", "postgres database username")
+	fs.StringVar(&databaseName, "databaseName", "blog_test", "database name")
+	fs.StringVar(&password, "password", "", "database password")
+	fs.StringVar(&sslMode, "sslMode", "disable", "set ssl mode enabled or disabled")
+
+	err := ff.Fill(fs, os.Args[1:])
+	if err != nil {
+		log.Fatalf("Error parsing flags: %v", err)
+	}
+
+	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", host, port, user, password, databaseName, sslMode)
 	db, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
 		panic(err)

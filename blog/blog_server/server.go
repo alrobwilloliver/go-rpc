@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"go-grpc-course/blog/blogpb"
-	db "go-grpc-course/blog/store"
+	db "go-grpc-course/store"
 	"log"
 	"net"
 	"os"
@@ -148,6 +148,24 @@ func (*server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*
 }
 
 func main() {
+
+	// var (
+	// 	host         string
+	// 	port         string
+	// 	user         string
+	// 	databaseName string
+	// 	password     string
+	// 	sslMode      string
+	// )
+
+	// fs := flag.NewFlagSet("blog", flag.ExitOnError)
+	// fs.StringVar(&host, "host", "localhost", "the host for the database")
+	// fs.StringVar(&port, "port", "5433", "port to host the database on")
+	// fs.StringVar(&user, "postgres-user", "postgres", "postgres database username")
+	// fs.StringVar(&databaseName, "databaseName", "blog_test", "database name")
+	// fs.StringVar(&password, "password", "", "database password")
+	// fs.StringVar(&sslMode, "sslMode", "disabled", "set ssl mode enabled or disabled")
+
 	fmt.Println("Starting RPC Blog Server...")
 
 	lis, err := net.Listen("tcp", "0.0.0.0:50051")
